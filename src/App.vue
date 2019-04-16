@@ -159,12 +159,20 @@ export default {
     vm.radius = 2.5
 
     vm.points = d3.range(2000).map(vm.phyllotaxis(10));
-
+console.log(vm.points,vm.points[0],vm.points[0][0])
     canvas.call(d3.zoom()
         .scaleExtent([1 / 2, 4])
         .on("zoom", vm.zoomed));
 
     vm.drawPoints(d3.zoomIdentity);
+
+    vm.context.beginPath()
+    vm.context.strokeStyle = "green"; // Green path
+    vm.context.moveTo(vm.points[0][0], vm.points[0][1]);
+    vm.context.lineTo(vm.points[1][0], vm.points[1][1]);
+    vm.context.stroke(); // Draw it
+
+
 
   },
  methods: {
