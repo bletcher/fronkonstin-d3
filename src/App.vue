@@ -120,6 +120,7 @@ export default {
       functions: ['constant', 'identity', 'log', 'square root', 'sin', 'log(x + 1)', '1 - cos(x)^2', '1/x',],
 
       listPolygon: [],
+      list: [],
       listPolygonScreen: [],
       listCon: [],
       listSegment: [],
@@ -156,56 +157,71 @@ export default {
     vm.context = canvas.node().getContext("2d")
     vm.width = canvas.property("width")
     vm.height = canvas.property("height")
-    vm.radius = 2.5
+   // vm.radius = 2.5
 
-    vm.points = d3.range(2000).map(vm.phyllotaxis(10));
-console.log(vm.points,vm.points[0],vm.points[0][0])
+   // vm.points = d3.range(2000).map(vm.phyllotaxis(10));
+
     canvas.call(d3.zoom()
         .scaleExtent([1 / 2, 4])
         .on("zoom", vm.zoomed));
 
-    vm.drawPoints(d3.zoomIdentity);
+    //vm.drawPoints(d3.zoomIdentity);
+    const edges = 5
+    const scale = 50
+    for (let n = 0; n < edges; n++) {
+      this.polygon(n, edges, scale, vm.width/2, vm.height/2);
+    }
+    console.log('poly', vm.list.length, vm.list)  
 
-    vm.context.beginPath()
-    vm.context.strokeStyle = "green"; // Green path
-    vm.context.moveTo(vm.points[0][0], vm.points[0][1]);
-    vm.context.lineTo(vm.points[1][0], vm.points[1][1]);
-    vm.context.stroke(); // Draw it
-
-
+    this.drawLines(d3.zoomIdentity)
 
   },
  methods: {
-   zoomed() {
-    this.context.clearRect(0, 0, this.width, this.height);
-    this.drawPoints(d3.event.transform);
+   drawLines(transform){
+     vm = this
+     for (let n = 0; n < vm.list.length; n++) { 
+       this.drawLine(n,transform)  
+     }
+
+      
+    // vm.list.map(transform.apply, transform).forEach(vm.drawLine);
+   },
+   drawLine(n,transform){
+     console.log('line', n,transform)
+     vm = this
+     vm.context.beginPath()
+     vm.context.strokeStyle = "red"; // Green path
+     vm.context.moveTo(transform.applyX(vm.list[n][0]), transform.applyY(vm.list[n][1]));
+     vm.context.lineTo(transform.applyX(vm.list[n][2]), transform.applyY(vm.list[n][3]));
+     vm.context.stroke(); // Draw it
+   }, 
+   polygon(n, edges, scale, initX, initY) {
+       const xStart = n == 0 ? initX : vm.list[n - 1][2];
+       const yStart = n == 0 ? initY : vm.list[n - 1][3];
+       const xEnd = xStart + Math.cos(((n + 1) * 2 * Math.PI) / edges) * scale;
+       const yEnd = yStart + Math.sin(((n + 1) * 2 * Math.PI) / edges) * scale;  
+
+       vm.list.push([xStart, yStart, xEnd, yEnd])
+   },
+
+  zoomed() {
+    vm = this
+    vm.context.clearRect(0, 0, vm.width, vm.height);
+    vm.drawLines(d3.event.transform);
   },
 
-   drawPoints(transform) {
+  drawPoints(transform) {
     vm = this 
     vm.context.beginPath();
     vm.points.map(transform.apply, transform).forEach(vm.drawPoint);
     vm.context.fill();
   },
 
-   drawPoint(point) {
+  drawPoint(point) {
     this.context.moveTo(point[0] + this.radius, point[1]);
     this.context.arc(point[0], point[1], this.radius, 0, 2 * Math.PI);
   },
 
-   phyllotaxis(radius) {
-    
-    vm = this 
-    var theta = Math.PI * (3 - Math.sqrt(5));
-     console.log('phylo', this.width,radius, vm.width)
-    return function(i) {
-      var r = radius * Math.sqrt(i), a = theta * i;
-      return [
-        vm.width / 2 + r * Math.cos(a),
-        vm.height / 2 + r * Math.sin(a)
-      ];
-    };
-  },
     updateSelectedEdges(){
       vm = this;
       vm.edges = vm.selectedNEdges 
