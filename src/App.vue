@@ -94,17 +94,33 @@
         </v-layout>
       </v-container>               
 
+  
+      <color-picker :width=300 :height=300 :disabled="false" v-model="color" startColor="#ff0000" @color-change="onColorChange">
+      </color-picker>
+      <div class="selected-color-info">
+        <p>Selected color:</p>
+        <svg height="32" width="32">
+          <circle cx="16" cy="16" r="15" :fill="color" />
+        </svg>
+        <p> {{ color }}</p>
+      </div>
+    
+
+
     </div> 
   </v-app>
 </template>
 
 <script>
 import * as d3 from 'd3'
+import ColorPicker from 'vue-color-picker-wheel';
 let vm = {};
 
 export default {
   name: 'App',
-
+  components: {
+    ColorPicker
+  },
   data () {
     return {
             scale: 100,
@@ -147,7 +163,10 @@ export default {
       initXData: null,
       initYData: null,
       stageWidth: null,
-      stageHeight: null
+      stageHeight: null,
+
+      currentTransform: d3.zoomIdentity,
+      color: "#ff6600"
     }
   },
   mounted(){
@@ -168,26 +187,50 @@ export default {
     //vm.drawPoints(d3.zoomIdentity);
     const edges = 5
     const scale = 50
-    for (let n = 0; n < edges; n++) {
-      this.polygon(n, edges, scale, vm.width/2, vm.height/2);
-    }
-    console.log('poly', vm.list.length, vm.list)  
 
-    this.drawLines(d3.zoomIdentity)
+    this.generateLines()
+
+       // nIter steps
+        for (let r = 1; r < vm.selectedNIter; r++) {
+          //console.log("in r loop", r);
+  /*        this.midPoints(0, scale, edges, r, pond, angle, fun);
+          //this.midPoints(1, scale, edges, 2);
+          for (let n = 1; n < edges; n++) {
+            this.midPoints(n, scale, edges, r, pond, angle, fun);
+            //if(r % step === 0) this.conPoints(n, edges, r, curve); 
+            this.conPoints2(n, edges, r, curve);
+          }
+          // // last line
+          this.conPoints2(edges, edges, r, curve);
+*/
+        }
+        
+
+
+
+   
 
   },
  methods: {
+   generateLines(){
+     vm = this
+     vm.list.length = 0
+     vm.context.clearRect(0, 0, vm.width, vm.height);
+
+     for (let n = 0; n < vm.selectedNEdges; n++) {
+       this.polygon(n, vm.selectedNEdges, 50, vm.width/2, vm.height/2);
+     }
+     this.drawLines(vm.currentTransform)
+     console.log('poly', vm.selectedNEdges,vm.list.length, vm.list)
+   },
    drawLines(transform){
      vm = this
      for (let n = 0; n < vm.list.length; n++) { 
        this.drawLine(n,transform)  
      }
-
-      
     // vm.list.map(transform.apply, transform).forEach(vm.drawLine);
    },
    drawLine(n,transform){
-     console.log('line', n,transform)
      vm = this
      vm.context.beginPath()
      vm.context.strokeStyle = "red"; // Green path
@@ -203,31 +246,112 @@ export default {
 
        vm.list.push([xStart, yStart, xEnd, yEnd])
    },
+   midPoints(n, scale, edges, ringNum, pond, angle, fun) {
+      const i = n + edges * (ringNum - 1);
+      //console.log("fun", i, fun(i), ringNum, fun(ringNum));
+      var xEndSegmentOffset = null;
+      var yEndSegmentOffset = null;
+      const ang =
+        Math.atan2(
+          vm.listPolygonScreen[i].yEnd - vm.listPolygonScreen[i].y,
+          vm.listPolygonScreen[i].xEnd - vm.listPolygonScreen[i].x
+        ) + Math.PI/angle;
 
+      if (ringNum > 1) {
+        xEndSegmentOffset = -fun(ringNum) * Math.cos(ang) * scale; // not sure why this is necessary
+        yEndSegmentOffset = -fun(ringNum) * Math.sin(ang) * scale;
+      } else {
+        xEndSegmentOffset = fun(ringNum) * Math.cos(ang) * scale;
+        yEndSegmentOffset = fun(ringNum) * Math.sin(ang) * scale;
+      }
+      const xSeg =
+        pond * vm.listPolygonScreen[i].x +
+        (1 - pond) * vm.listPolygonScreen[i].xEnd;
+      const ySeg =
+        pond * vm.listPolygonScreen[i].y +
+        (1 - pond) * vm.listPolygonScreen[i].yEnd;
+
+      vm.listSegment.push({
+        angle: angle,
+        x: xSeg,
+        y: ySeg,
+        xEndSegmentOffset: xEndSegmentOffset,
+        yEndSegmentOffset: yEndSegmentOffset,
+        xEnd: xSeg + xEndSegmentOffset,
+        yEnd: ySeg + yEndSegmentOffset,
+        points: [0, 0, xEndSegmentOffset, yEndSegmentOffset],
+        ringNum: ringNum,
+        i: i,
+        stroke: "green",
+        source: "midPoints"
+      });
+    },
+    conPoints2(n, edges, ringNum, curve) {
+      console.log('conPoints2', n, i)
+      const i = n + edges * (ringNum - 1);
+      var xSegOffset = null;
+      var ySegOffset = null;
+ 
+ console.log('conPoints2', n, i)
+
+      if (n == edges) {
+        xSegOffset = -(
+          vm.listPolygonScreen[edges * (ringNum - 1)].xEnd -
+          vm.listPolygonScreen[i - 1].xEnd
+        );
+        ySegOffset = -(
+          vm.listPolygonScreen[edges * (ringNum - 1)].yEnd -
+          vm.listPolygonScreen[i - 1].yEnd
+        );
+        vm.listCon.push({
+          x: vm.listPolygonScreen[edges * (ringNum - 1)].xEnd,
+          y: vm.listPolygonScreen[edges * (ringNum - 1)].yEnd,
+          points: [0, 0, xSegOffset, ySegOffset],
+          xEnd: vm.listPolygonScreen[edges * (ringNum - 1)].xEnd + xSegOffset,
+          yEnd: vm.listPolygonScreen[edges * (ringNum - 1)].yEnd + ySegOffset,
+          tension: curve,
+          ringNum: ringNum,
+          i: i,
+          stroke: "blue",
+          source: "conPoints2"
+        });
+      } else {
+        xSegOffset = -(vm.listPolygonScreen[i].xEnd - vm.listPolygonScreen[i - 1].xEnd);
+        ySegOffset = -(vm.listPolygonScreen[i].yEnd - vm.listPolygonScreen[i - 1].yEnd);
+
+        vm.listCon.push({
+          x: vm.listPolygonScreen[i].xEnd,
+          y: vm.listPolygonScreen[i].yEnd,
+          points: [0, 0, xSegOffset, ySegOffset],
+          xEnd: vm.listPolygonScreen[i].xEnd + xSegOffset,
+          yEnd: vm.listPolygonScreen[i].yEnd + ySegOffset,
+          tension: curve,
+          ringNum: ringNum,
+          i: i,
+          stroke: "blue",
+          source: "conPoints2"
+        });
+      }
+    },    
+  
   zoomed() {
     vm = this
     vm.context.clearRect(0, 0, vm.width, vm.height);
     vm.drawLines(d3.event.transform);
+    vm.currentTransform = d3.event.transform
+    console.log('zoomed',d3.event.transform)
   },
 
-  drawPoints(transform) {
-    vm = this 
-    vm.context.beginPath();
-    vm.points.map(transform.apply, transform).forEach(vm.drawPoint);
-    vm.context.fill();
-  },
 
-  drawPoint(point) {
-    this.context.moveTo(point[0] + this.radius, point[1]);
-    this.context.arc(point[0], point[1], this.radius, 0, 2 * Math.PI);
-  },
 
     updateSelectedEdges(){
       vm = this;
       vm.edges = vm.selectedNEdges 
-      vm.render(vm.initXData,vm.initYData,vm.scale,vm.selectedNEdges,vm.nIter,vm.pond,vm.step,vm.angle,vm.curve,vm.fun)
-      console.log('in updateSElectedEdges', vm.selectedNEdges,500,500,vm.scale,
-      vm.edges,vm.nIter,vm.pond,vm.step,vm.angle,vm.curve,vm.fun)
+      console.log('updateSelectedEdges',vm.currentTransform)
+      vm.generateLines()
+     // vm.render(vm.initXData,vm.initYData,vm.scale,vm.selectedNEdges,vm.nIter,vm.pond,vm.step,vm.angle,vm.curve,vm.fun)
+     // console.log('in updateSElectedEdges', vm.selectedNEdges,500,500,vm.scale,
+     // vm.edges,vm.nIter,vm.pond,vm.step,vm.angle,vm.curve,vm.fun)
     },
     updateNIter(){
       vm = this;
@@ -312,6 +436,9 @@ export default {
       vm.selectedFunction = vm.fun
       console.log('function', vm.fun, 1,vm.selectedFunction)
       vm.render(vm.initXData,vm.initYData,vm.scale,vm.selectedNEdges,vm.nIter,vm.pond,vm.step,vm.angle,vm.curve,vm.fun)
+    },
+    onColorChange(color) {
+      console.log('Color has changed to: ', color);
     }
   },
 }
@@ -320,5 +447,31 @@ export default {
 </script>
 
 <style>
+
+  @import url(https://fonts.googleapis.com/css?family=Barlow);
+
+  * {
+    font-family: "Barlow";
+  }
+
+  .center * {
+    text-align: center;
+  }
+
+  #color-wheel {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .selected-color-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 15px 0;
+  }
+
+  .selected-color-info p {
+    margin: 0 5px 0 0;
+  }
 
 </style>  
