@@ -56,9 +56,9 @@
                   v-model="selectedAngle"
                   label="Angle"
                   @change="updateAngle"
-                  :max="20"
+                  :max="7"
                   :min="0"
-                  :step="0.1"
+                  :step="0.01"
                 ></v-slider>
 
                 <v-slider class="ma-2"
@@ -87,25 +87,22 @@
                   v-model="selectedFunction"
                   @change="updateFunction"
                 ></v-select>
-      
+       
+                <color-picker :width=300 :height=300 :disabled="false" v-model="selectedColor" startColor="#ff0000" @color-change="onColorChange">
+                </color-picker>
+                <div class="selected-color-info">
+                  <p>Selected color:</p>
+                  <svg height="32" width="32">
+                    <circle cx="16" cy="16" r="15" :fill="selectedColor" />
+                  </svg>
+                  <p> {{ selectedColor }}</p>
+                </div>
+    
               </v-card>
             </v-flex>
 
         </v-layout>
-      </v-container>               
-
-  
-      <color-picker :width=300 :height=300 :disabled="false" v-model="selectedColor" startColor="#ff0000" @color-change="onColorChange">
-      </color-picker>
-      <div class="selected-color-info">
-        <p>Selected color:</p>
-        <svg height="32" width="32">
-          <circle cx="16" cy="16" r="15" :fill="selectedColor" />
-        </svg>
-        <p> {{ selectedColor }}</p>
-      </div>
-    
-
+      </v-container>
 
     </div> 
   </v-app>
@@ -123,16 +120,6 @@ export default {
   },
   data () {
     return {
-            scale: 100,
-      edges: 5, //# Number of edges of the original polygon
-      nIter: 3, //# Number of iterations
-      pond: 0.5, //# Weight to calculate the point on the middle of each edge
-      step: 2, // # No of times to draw mid-segments before connect ending points
-      angle: 2, //# angle of mid-segment with the edge
-      curve: 5, //# Curvature of curves
-      fun: function() {
-        return (0.2);
-      },
       functions: ['constant', 'identity', 'log', 'square root', 'sin', 'log(x + 1)', '1 - cos(x)^2', '1/x',],
 
       listPolygon: [],
@@ -141,24 +128,15 @@ export default {
       listCon: [],
       listSegment: [],
      
-      selectedNEdges: 5,
-      selectedNIter: 4,
-      selectedPond: 0.5,
-      selectedStep: 3,
-      selectedAngle: 2,
-      selectedCurve: 5,
-      selectedScale: 150,
+      selectedNEdges: 5, //# Number of edges of the original polygon
+      selectedNIter: 4, //# Number of iterations
+      selectedPond: 0.5, //# Weight to calculate the point on the middle of each edge
+      selectedStep: 3,// # No of times to draw mid-segments before connect ending points
+      selectedAngle: 2, //# angle of mid-segment with the edge
+      selectedCurve: 5, //# Curvature of curves
+      selectedScale: 150, // inital scaling factor
       selectedFunction: function() {
         return (0.2);
-      },
-
-      selectedValues: {   // will incorporate this on refactor
-        selectedNEdges: 5,
-        selectedNIter: 4,
-        selectedPond: 0.5,
-        selectedAngle: 2,
-        selectedCurve: 5,
-        selectedScale: 100
       },
       initXData: null,
       initYData: null,
@@ -178,7 +156,7 @@ export default {
     vm.height = canvas.property("height")
 
     canvas.call(d3.zoom()
-        .scaleExtent([1 / 2, 4])
+        .scaleExtent([1 , 1])
         .on("zoom", vm.zoomed));
  
     this.generateLines()
@@ -193,21 +171,18 @@ export default {
        this.polygon(n, vm.selectedNEdges, vm.selectedScale, vm.width/2, vm.height/2);
      }
 
-    let ringNum = 1
     for (let i = 1; i < vm.selectedNIter; i++) {
       for (let n = 0; n < vm.selectedNEdges; n++) {
         i%vm.selectedStep === 0 ? this.connectPoints(n,i) : this.midPoints(n,i)
       }
     }
     this.drawLines(vm.currentTransform)
-    console.log('poly', vm.selectedNEdges,vm.list.length, vm.list)
    },
    drawLines(transform){
      vm = this
      for (let n = 0; n < vm.list.length; n++) { 
        this.drawLine(n,transform)  
      }
-    // vm.list.map(transform.apply, transform).forEach(vm.drawLine);
    },
    drawLine(n,transform){
      vm = this
@@ -242,7 +217,6 @@ export default {
       const yEnd = y + vm.selectedFunction(ringNum) * Math.sin(angle) * vm.selectedScale
 
       vm.list.push([x, y, xEnd, yEnd])
-      //console.log('midPooints',n, vm.selectedNEdges, angle, currentIndex, vm.selectedFunction,vm.selectedFunction(ringNum),refIndex,vm.list)  
    },
    connectPoints(n,i) {
       const currentIndex = vm.list.length
@@ -254,65 +228,14 @@ export default {
       let yEnd = null
 
       if (n == (vm.selectedNEdges - 1)) {
-        console.log("conn",n,refIndex,n === (vm.selectedNEdges - 1))
         xEnd = vm.list[refIndex + 1 - vm.selectedNEdges][2]
         yEnd = vm.list[refIndex + 1 - vm.selectedNEdges][3]
       } else {      
         xEnd = vm.list[refIndex + 1][2]
         yEnd = vm.list[refIndex + 1][3]
-          console.log("connn2",n,refIndex,n === (vm.selectedNEdges - 1),xEnd)
       }
-     console.log("conn3",n,refIndex,n === (vm.selectedNEdges - 1),xEnd)
       vm.list.push([x, y, xEnd, yEnd])
    },
-    conPoints2(n, edges, ringNum, curve) {
-      console.log('conPoints2', n, i)
-      const i = n + edges * (ringNum - 1);
-      var xSegOffset = null;
-      var ySegOffset = null;
- 
- console.log('conPoints2', n, i)
-
-      if (n == edges) {
-        xSegOffset = -(
-          vm.listPolygonScreen[edges * (ringNum - 1)].xEnd -
-          vm.listPolygonScreen[i - 1].xEnd
-        );
-        ySegOffset = -(
-          vm.listPolygonScreen[edges * (ringNum - 1)].yEnd -
-          vm.listPolygonScreen[i - 1].yEnd
-        );
-        vm.listCon.push({
-          x: vm.listPolygonScreen[edges * (ringNum - 1)].xEnd,
-          y: vm.listPolygonScreen[edges * (ringNum - 1)].yEnd,
-          points: [0, 0, xSegOffset, ySegOffset],
-          xEnd: vm.listPolygonScreen[edges * (ringNum - 1)].xEnd + xSegOffset,
-          yEnd: vm.listPolygonScreen[edges * (ringNum - 1)].yEnd + ySegOffset,
-          tension: curve,
-          ringNum: ringNum,
-          i: i,
-          stroke: "blue",
-          source: "conPoints2"
-        });
-      } else {
-        xSegOffset = -(vm.listPolygonScreen[i].xEnd - vm.listPolygonScreen[i - 1].xEnd);
-        ySegOffset = -(vm.listPolygonScreen[i].yEnd - vm.listPolygonScreen[i - 1].yEnd);
-
-        vm.listCon.push({
-          x: vm.listPolygonScreen[i].xEnd,
-          y: vm.listPolygonScreen[i].yEnd,
-          points: [0, 0, xSegOffset, ySegOffset],
-          xEnd: vm.listPolygonScreen[i].xEnd + xSegOffset,
-          yEnd: vm.listPolygonScreen[i].yEnd + ySegOffset,
-          tension: curve,
-          ringNum: ringNum,
-          i: i,
-          stroke: "blue",
-          source: "conPoints2"
-        });
-      }
-    },    
-  
   zoomed() {
     vm = this
     vm.context.clearRect(0, 0, vm.width, vm.height);
@@ -320,104 +243,92 @@ export default {
     vm.currentTransform = d3.event.transform
     //console.log('zoomed',d3.event.transform)
   },
-    updateSelectedEdges(){
-      vm = this;
-      vm.edges = vm.selectedNEdges 
-      console.log('updateSelectedEdges',vm.currentTransform)
-      vm.generateLines()
-     // vm.render(vm.initXData,vm.initYData,vm.scale,vm.selectedNEdges,vm.nIter,vm.pond,vm.step,vm.angle,vm.curve,vm.fun)
-     // console.log('in updateSElectedEdges', vm.selectedNEdges,500,500,vm.scale,
-     // vm.edges,vm.nIter,vm.pond,vm.step,vm.angle,vm.curve,vm.fun)
+  updateSelectedEdges(){
+    vm = this;
+    vm.generateLines()
+  },
+  updateNIter(){
+    vm = this;
+    this.generateLines() 
     },
-    updateNIter(){
-      vm = this;
-      vm.nIter = vm.selectedNIter 
-      this.generateLines() 
-      },
-    updatePond(){
-      vm = this;
-      vm.pond = vm.selectedPond 
-      this.generateLines()
-    },
-    updateStep(){
-      vm = this;
-      vm.step = vm.selectedStep 
-      this.generateLines()
-    },
-    updateAngle(){
-      vm = this;
-      vm.angle = vm.selectedAngle 
-      this.generateLines()
-    },
-    updateCurve(){
-      vm = this;
-      vm.curve = vm.selectedCurve 
-      this.generateLines()
-    },
-    updateScale(){
-      vm = this;
-      vm.scale = vm.selectedScale 
-      this.generateLines()
-    },
-    updateFunction(){
-      vm = this;
-      
-      switch(vm.selectedFunction) {
-        case 'constant':
-          vm.fun = function() {
-              return (0.2);
-          }
-          break;
-        case 'identity':
-          vm.fun = function(d) {
-              return (d);
-          }
-          break;
-        case 'log':
-          vm.fun = function(d) {
-              return Math.log(d);
-          }
-          break;
-        case 'square root':
-          vm.fun = function(d) {
-              return Math.sqrt(d);
-          }
-          break;
-        case 'sin':
-          vm.fun = function(d) {
-              return Math.sin(d);
-          }
-          break;
-        case 'log(x + 1)':
-          vm.fun = function(d) {
-              return Math.log(d + 1);
-          }
-          break;
-        case '1 - cos(x)^2':
-          vm.fun = function(d) {
-              return 1 - Math.cos(d)^2;
-          }
-          break;
-        case '1/x':
-          vm.fun = function(d) {
-              return 1 / d;
-          }
-          break;
-        default:
-          vm.fun = function(d) {
-              return (d);
-          }
-      }
-
-      vm.selectedFunction = vm.fun
-      console.log('function', vm.fun, 1,vm.selectedFunction)
-      this.generateLines()
-    },
-    onColorChange(selectedColor) {
-      this.drawLines(vm.currentTransform)
-      console.log('Color has changed to: ', selectedColor);
+  updatePond(){
+    vm = this;
+    this.generateLines()
+  },
+  updateStep(){
+    vm = this;
+    this.generateLines()
+  },
+  updateAngle(){
+    vm = this;
+    this.generateLines()
+  },
+  updateCurve(){
+    vm = this;
+    this.generateLines()
+  },
+  updateScale(){
+    vm = this;
+    this.generateLines()
+  },
+  updateFunction(){
+    vm = this;
+    
+    switch(vm.selectedFunction) {
+      case 'constant':
+        vm.fun = function() {
+            return (0.2);
+        }
+        break;
+      case 'identity':
+        vm.fun = function(d) {
+            return (d);
+        }
+        break;
+      case 'log':
+        vm.fun = function(d) {
+            return Math.log(d);
+        }
+        break;
+      case 'square root':
+        vm.fun = function(d) {
+            return Math.sqrt(d);
+        }
+        break;
+      case 'sin':
+        vm.fun = function(d) {
+            return Math.sin(d);
+        }
+        break;
+      case 'log(x + 1)':
+        vm.fun = function(d) {
+            return Math.log(d + 1);
+        }
+        break;
+      case '1 - cos(x)^2':
+        vm.fun = function(d) {
+            return 1 - Math.cos(d)^2;
+        }
+        break;
+      case '1/x':
+        vm.fun = function(d) {
+            return 1 / d;
+        }
+        break;
+      default:
+        vm.fun = function(d) {
+            return (d);
+        }
     }
+    vm.selectedFunction = vm.fun
+    console.log('function', vm.fun, 1,vm.selectedFunction)
+    this.generateLines()
+  },
+  onColorChange(selectedColor) {
+    this.drawLines(vm.currentTransform)
+    console.log('Color has changed to: ', selectedColor);
   }
+ }
 }
 
 </script>
