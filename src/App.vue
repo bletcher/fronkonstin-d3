@@ -71,16 +71,6 @@
                   :step="0.1"
                 ></v-slider>
 
-                <v-slider class="ma-2"
-                  thumb-label
-                  v-model="selectedScale"
-                  label="Scale"
-                  @change="update"
-                  :max="500"
-                  :min="1"
-                  :step="1"
-                ></v-slider>
-
                 <v-select class="ma-2"
                   :items="functions"
                   label="Function"
@@ -158,17 +148,11 @@ export default {
       selectedLinesColor: "#ff6600",
       selectedBackgroundColor: "#ffffff",
       colorSource: 'Lines',
-
-      yRange: null,
-      yDomain: [],
-
-      xRangeOffset: 50, //margins for scale
-      yRangeOffset: 50,
+      
+      margin: 50,
 
       xScale: null,
-      yScale: null,
-
-      xyCircles: [ [500, 500], [600, 600], [20, 200] ]
+      yScale: null
     }
   },
   mounted(){
@@ -179,70 +163,49 @@ export default {
     vm.width = canvas.property("width")
     vm.height = canvas.property("height")
 
-    vm.xScale = d3.scaleLinear().range([0, vm.width]);
-    vm.yScale = d3.scaleLinear().range([vm.height, 0]);
+    vm.xScale = d3.scaleLinear().range([vm.margin, vm.height - vm.margin]);
+    vm.yScale = d3.scaleLinear().range([vm.height - vm.margin, vm.margin]);
 
     const zoom = d3.zoom()
-        .scaleExtent([1/10 , 5])
-        .on("zoom", vm.zoomed3);
+        .scaleExtent([1/10 , 50])
+        .on("zoom", vm.zoomed);
 
     canvas.call(zoom)
-    vm.getDomain() // domain of data. Used in xScale, yScale
 
-    vm.drawCircles(d3.zoomIdentity)
-    //vm.generateLines()
+    vm.generateLines()
   },
  methods: {
-   drawCircles(transform){
-      vm = this
-
-      vm.context.clearRect(0, 0, vm.width, vm.height);
-      vm.context.fillStyle = vm.selectedBackgroundColor
-      vm.context.fillRect(0, 0, vm.width, vm.height)
-
-      vm.context.beginPath();
-      vm.context.strokeStyle = vm.selectedLinesColor 
-      for(let i = 0; i < vm.xyCircles.length; i++){
-          vm.drawCircle(i,transform)
-      }
-      vm.context.stroke();
-
-   },
-   drawCircle(i,transform){
-     vm = this
-
-     const d0 = transform.x + transform.k * vm.xScale(vm.xyCircles[i][0])
-     const d1 = transform.y + transform.k * vm.yScale(vm.xyCircles[i][1])
-     vm.context.moveTo(d0, d1)
-     vm.context.arc(d0, d1, 50, 0, 2 * Math.PI);
-   },
    getDomain(){
     vm = this   
-    
-    const xRangeOffset = vm.xRangeOffset
-    const yRangeOffset = vm.yRangeOffset
-    const xValues = vm.xyCircles.map(function(value,index) { return value[0]; })
-    const yValues = vm.xyCircles.map(function(value,index) { return value[1]; })
-    const xRange = [Math.min(...xValues) - xRangeOffset, Math.max(...xValues) + xRangeOffset]
-    const yRange = [Math.min(...yValues) - yRangeOffset, Math.max(...yValues) + yRangeOffset]
+
+    const xStartValues = vm.list.map(function(value,index) { return value[0]; })
+    const yStartValues = vm.list.map(function(value,index) { return value[1]; })
+    const xEndValues   = vm.list.map(function(value,index) { return value[2]; })
+    const yEndValues   = vm.list.map(function(value,index) { return value[3]; })
+    const xMin = Math.min(...xStartValues,...xEndValues)
+    const xMax = Math.max(...xStartValues,...xEndValues)
+    const yMin = Math.min(...yStartValues,...yEndValues)
+    const yMax = Math.max(...yStartValues,...yEndValues)
+
+    const xRange = [Math.min(...xStartValues,...xEndValues), Math.max(...xStartValues,...xEndValues)]
+    const yRange = [Math.min(...yStartValues,...yEndValues), Math.max(...yStartValues,...yEndValues)]
 
     vm.xScale.domain(xRange)
     vm.yScale.domain(yRange)
+    console.log('getDomain', vm.list, xStartValues,yStartValues,xRange,yRange,xRange[1]-xRange[0],yRange[1]-yRange[0])
    },
-   zoomed3() {
-    vm = this
-    vm.currentTransform = d3.event.transform
-    vm.drawCircles(d3.event.transform);
-    //console.log('zoom', d3.event.transform)
-  },
-
+   zoomed() {
+     vm = this
+     vm.currentTransform = d3.event.transform
+     vm.drawLines(d3.event.transform);
+    },
    generateLines(){
      vm = this
      vm.list.length = 0
      vm.context.clearRect(0, 0, vm.width, vm.height);
 
      for (let n = 0; n < vm.selectedNEdges; n++) {
-       this.polygon(n, vm.selectedNEdges, vm.selectedScale, vm.width/2, vm.height/2);
+       this.polygon(n);
      }
 
     for (let i = 1; i < vm.selectedNIter; i++) {
@@ -251,12 +214,14 @@ export default {
       }
     }
     console.log('generateLines', vm.currentTransform)
-    vm.adjustInitialTransformScale(vm.currentTransform)
+
+    vm.getDomain() // domain of data. Used for xScale, yScale
     this.drawLines(vm.currentTransform)
    },
    drawLines(transform){
      vm = this
-     console.log('drawLines', transform)
+ //    console.log('drawLines', transform)
+     vm.context.clearRect(0, 0, vm.width, vm.height);
      vm.context.fillStyle = vm.selectedBackgroundColor
      vm.context.fillRect(0, 0, vm.width, vm.height)
      
@@ -265,46 +230,24 @@ export default {
      }
    },
    drawLine(n,transform){
-     //console.log('drawLine', transform)
+ //    console.log('drawLine', transform, vm.xScale(500),vm.yScale(400), 
+ //      transform.x + transform.k * vm.xScale(vm.list[n][0]),
+ //      transform.y + transform.k * vm.yScale(vm.list[n][1]))
      vm = this
      vm.context.beginPath()
-     vm.context.strokeStyle = vm.selectedLinesColor //"red"; // Green path
-     vm.context.moveTo(vm.list[n][0], vm.list[n][1]);
-     vm.context.lineTo(vm.list[n][2], vm.list[n][3]);
-     vm.context.stroke(); // Draw it
-
-vm.context.beginPath();
-vm.context.strokeStyle = vm.selectedLinesColor 
-vm.context.arc(transform.applyX(vm.width/2), transform.applyY(vm.yDomain[0]), 5, 0, 2 * Math.PI);
-vm.context.arc(transform.applyX(vm.width/2), transform.applyY(vm.yDomain[1]), 5, 0, 2 * Math.PI);
-vm.context.stroke();
+     vm.context.strokeStyle = vm.selectedLinesColor
+     vm.context.moveTo(transform.x + transform.k * vm.xScale(vm.list[n][0]),
+                       transform.y + transform.k * vm.yScale(vm.list[n][1]));
+     vm.context.lineTo(transform.x + transform.k * vm.xScale(vm.list[n][2]),
+                       transform.y + transform.k * vm.yScale(vm.list[n][3]));
+     vm.context.stroke(); 
 
    }, 
-   adjustInitialTransformScale(transform) {
-    console.log('adjust', transform)
-    vm = this
-
-    const domains = d3.extent(vm.list)
-    vm.yDomain = [domains[0][3], domains[1][3]]
-    vm.yRange = (domains[1][3]) - (domains[0][3])
-
-    //if(vm.yRange > vm.height) {
-      vm.currentTransform = transform.scale( 1/(vm.yRange / vm.height))
-    //}
-    console.log('in getIntialTransformScale a', vm.yRange / vm.height)
-    console.log('in getIntialTransformScale b', transform, vm.currentTransform, vm.yRange,vm.yDomain[1], transform.applyY(vm.yDomain[1]), vm.height)  
-
-    console.log('in getIntialTransformScale', vm.list, vm.yDomain, vm.yRange, vm.height, vm.yRange > vm.height, 
-    vm.currentTransform, transform.applyX(vm.width/2), transform.applyY(vm.yDomain[1]))
-
-
-
-   },
-   polygon(n, edges, scale, initX, initY) {
-       const xStart = n == 0 ? initX : vm.list[n - 1][2];
-       const yStart = n == 0 ? initY : vm.list[n - 1][3];
-       const xEnd = xStart + Math.cos(((n + 1) * 2 * Math.PI) / edges) * scale;
-       const yEnd = yStart + Math.sin(((n + 1) * 2 * Math.PI) / edges) * scale;  
+   polygon(n) {
+       const xStart = n == 0 ? vm.width/2  : vm.list[n - 1][2];
+       const yStart = n == 0 ? vm.height/2 : vm.list[n - 1][3];
+       const xEnd = xStart + Math.cos(((n + 1) * 2 * Math.PI) / vm.selectedNEdges);
+       const yEnd = yStart + Math.sin(((n + 1) * 2 * Math.PI) / vm.selectedNEdges);  
 
        vm.list.push([xStart, yStart, xEnd, yEnd])
    },
@@ -344,22 +287,6 @@ vm.context.stroke();
       }
       vm.list.push([x, y, xEnd, yEnd])
    },
-  zoomed() {
-    vm = this
-    
-    vm.context.save();
-    vm.context.clearRect(0, 0, vm.width, vm.height);
-    vm.context.translate(d3.event.transform.x, d3.event.transform.y);
-    vm.context.scale(d3.event.transform.k, d3.event.transform.k);
-    vm.drawLines();
-    vm.context.restore();
-   
-   /*
-   vm.context.clearRect(0, 0, vm.width, vm.height);
-    vm.drawLines(d3.event.transform);
-    vm.currentTransform = d3.event.transform
- //   console.log('zoomed',d3.event.transform)*/
-  },
   update(){
     this.generateLines()
   },
@@ -424,15 +351,15 @@ vm.context.stroke();
     else {
       vm.selectedBackgroundColor = selectedColor
     }
-    //vm.drawLines(vm.currentTransform)
-    vm.drawCircles(vm.currentTransform)
+    vm.drawLines(vm.currentTransform)
+    //vm.drawCircles(vm.currentTransform)
     console.log('Color has changed to: ', selectedColor, vm.colorSource, vm.currentTransform);
   },
   updateColorSource(){
     vm = this
     console.log('updateColorSource', vm.colorSource, vm.currentTransform)
-    //this.generateLines()
-    vm.drawCircles(vm.currentTransform)
+    vm.drawLines(vm.currentTransform)
+    //vm.drawCircles(vm.currentTransform)
   },
   getAvg(d) {
     const total = d.reduce((acc, c) => acc + c, 0);
