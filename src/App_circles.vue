@@ -160,7 +160,15 @@ export default {
       colorSource: 'Lines',
 
       yRange: null,
-      yDomain: []
+      yDomain: [],
+
+      xRangeOffset: 50, //margins for scale
+      yRangeOffset: 50,
+
+      xScale: null,
+      yScale: null,
+
+      xyCircles: [ [500, 500], [600, 600], [20, 200] ]
     }
   },
   mounted(){
@@ -171,16 +179,63 @@ export default {
     vm.width = canvas.property("width")
     vm.height = canvas.property("height")
 
-    let zoom = canvas.call(d3.zoom()
-        //.scaleExtent([1/100 , 50])
-        .scaleExtent([1/2 , 500])
-        .on("zoom", vm.zoomed));
+    vm.xScale = d3.scaleLinear().range([0, vm.width]);
+    vm.yScale = d3.scaleLinear().range([vm.height, 0]);
 
-    //vm.drawCircles()
-    vm.generateLines()
+    const zoom = d3.zoom()
+        .scaleExtent([1/10 , 5])
+        .on("zoom", vm.zoomed3);
 
+    canvas.call(zoom)
+    vm.getDomain() // domain of data. Used in xScale, yScale
+
+    vm.drawCircles(d3.zoomIdentity)
+    //vm.generateLines()
   },
  methods: {
+   drawCircles(transform){
+      vm = this
+
+      vm.context.clearRect(0, 0, vm.width, vm.height);
+      vm.context.fillStyle = vm.selectedBackgroundColor
+      vm.context.fillRect(0, 0, vm.width, vm.height)
+
+      vm.context.beginPath();
+      vm.context.strokeStyle = vm.selectedLinesColor 
+      for(let i = 0; i < vm.xyCircles.length; i++){
+          vm.drawCircle(i,transform)
+      }
+      vm.context.stroke();
+
+   },
+   drawCircle(i,transform){
+     vm = this
+
+     const d0 = transform.x + transform.k * vm.xScale(vm.xyCircles[i][0])
+     const d1 = transform.y + transform.k * vm.yScale(vm.xyCircles[i][1])
+     vm.context.moveTo(d0, d1)
+     vm.context.arc(d0, d1, 50, 0, 2 * Math.PI);
+   },
+   getDomain(){
+    vm = this   
+    
+    const xRangeOffset = vm.xRangeOffset
+    const yRangeOffset = vm.yRangeOffset
+    const xValues = vm.xyCircles.map(function(value,index) { return value[0]; })
+    const yValues = vm.xyCircles.map(function(value,index) { return value[1]; })
+    const xRange = [Math.min(...xValues) - xRangeOffset, Math.max(...xValues) + xRangeOffset]
+    const yRange = [Math.min(...yValues) - yRangeOffset, Math.max(...yValues) + yRangeOffset]
+
+    vm.xScale.domain(xRange)
+    vm.yScale.domain(yRange)
+   },
+   zoomed3() {
+    vm = this
+    vm.currentTransform = d3.event.transform
+    vm.drawCircles(d3.event.transform);
+    //console.log('zoom', d3.event.transform)
+  },
+
    generateLines(){
      vm = this
      vm.list.length = 0
@@ -196,35 +251,34 @@ export default {
       }
     }
     console.log('generateLines', vm.currentTransform)
-    //vm.adjustInitialTransformScale(vm.currentTransform)
-    this.drawLines()
+    vm.adjustInitialTransformScale(vm.currentTransform)
+    this.drawLines(vm.currentTransform)
    },
-   drawLines(){
+   drawLines(transform){
      vm = this
-     console.log('drawLines')
+     console.log('drawLines', transform)
      vm.context.fillStyle = vm.selectedBackgroundColor
      vm.context.fillRect(0, 0, vm.width, vm.height)
      
      for (let n = 0; n < vm.list.length; n++) { 
-       this.drawLine(n)  
+       this.drawLine(n,transform)  
      }
    },
-   drawLine(n){
-     console.log('drawLine')
+   drawLine(n,transform){
+     //console.log('drawLine', transform)
      vm = this
      vm.context.beginPath()
      vm.context.strokeStyle = vm.selectedLinesColor //"red"; // Green path
-     vm.context.moveTo((vm.list[n][0]), (vm.list[n][1]));
-     vm.context.lineTo((vm.list[n][2]), (vm.list[n][3]));
+     vm.context.moveTo(vm.list[n][0], vm.list[n][1]);
+     vm.context.lineTo(vm.list[n][2], vm.list[n][3]);
      vm.context.stroke(); // Draw it
 
-/*
 vm.context.beginPath();
 vm.context.strokeStyle = vm.selectedLinesColor 
 vm.context.arc(transform.applyX(vm.width/2), transform.applyY(vm.yDomain[0]), 5, 0, 2 * Math.PI);
 vm.context.arc(transform.applyX(vm.width/2), transform.applyY(vm.yDomain[1]), 5, 0, 2 * Math.PI);
 vm.context.stroke();
-*/
+
    }, 
    adjustInitialTransformScale(transform) {
     console.log('adjust', transform)
@@ -296,7 +350,6 @@ vm.context.stroke();
     vm.context.save();
     vm.context.clearRect(0, 0, vm.width, vm.height);
     vm.context.translate(d3.event.transform.x, d3.event.transform.y);
-    d3.event.transform.scale(100)
     vm.context.scale(d3.event.transform.k, d3.event.transform.k);
     vm.drawLines();
     vm.context.restore();
@@ -371,12 +424,19 @@ vm.context.stroke();
     else {
       vm.selectedBackgroundColor = selectedColor
     }
-    vm.drawLines(vm.currentTransform)
-    console.log('Color has changed to: ', selectedColor, vm.colorSource);
+    //vm.drawLines(vm.currentTransform)
+    vm.drawCircles(vm.currentTransform)
+    console.log('Color has changed to: ', selectedColor, vm.colorSource, vm.currentTransform);
   },
   updateColorSource(){
-    console.log('updateColorSource', this.colorSource)
-    this.generateLines()
+    vm = this
+    console.log('updateColorSource', vm.colorSource, vm.currentTransform)
+    //this.generateLines()
+    vm.drawCircles(vm.currentTransform)
+  },
+  getAvg(d) {
+    const total = d.reduce((acc, c) => acc + c, 0);
+    return total / d.length;
   }
  }
 }
