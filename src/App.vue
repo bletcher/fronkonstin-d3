@@ -73,34 +73,51 @@
 
                 <v-select class="ma-2"
                   :items="functions"
+                  item-text="selectedFunction"
                   label="Function"
                   v-model="selectedFunction"
                   @change="updateFunction"
+                  
+                  
                 ></v-select>
        
-                <v-flex xs12 sm6 class="py-2">      
-                  <v-btn-toggle 
-                  v-model="colorSource"
-                  @change="updateColorSource"
-                  >
-                    <v-btn flat value="Lines">
-                      Lines
-                    </v-btn>
-                    <v-btn flat value="Background">
-                      Background
-                    </v-btn>
-                  </v-btn-toggle>
-                </v-flex>
+                <hr>
 
-                <color-picker :width=300 :height=300 :disabled="false" v-model="selectedColor" startColor="#ff0000" @color-change="onColorChange">
-                </color-picker>
-                <div class="selected-color-info">
-                  <p>Selected color:</p>
-                  <svg height="32" width="32">
-                    <circle cx="16" cy="16" r="15" :fill="selectedColor" />
-                  </svg>
-                  <p> {{ selectedColor }}</p>
-                </div>
+                <v-expansion-panel>
+                    <v-expansion-panel-content>
+                        <template v-slot:header>
+                        <div>Color picker</div>
+                        </template>
+                        <v-card>
+
+                                <v-flex xs12 sm6 class="py-2">      
+                                <v-btn-toggle 
+                                v-model="colorSource"
+                                @change="updateColorSource"
+                                >
+                                    <v-btn flat value="Lines">
+                                    Lines
+                                    </v-btn>
+                                    <v-btn flat value="Background">
+                                    Background
+                                    </v-btn>
+                                </v-btn-toggle>
+                                </v-flex>
+
+                                <color-picker :width=300 :height=300 :disabled="false" v-model="selectedColor" startColor="#ff0000" @color-change="onColorChange">
+                                </color-picker>
+                                <div class="selected-color-info">
+                                <p>Selected color:</p>
+                                <svg height="32" width="32">
+                                    <circle cx="16" cy="16" r="15" :fill="selectedColor" />
+                                </svg>
+                                <p> {{ selectedColor }}</p>
+                                </div>
+
+
+                        </v-card>
+                    </v-expansion-panel-content>
+                    </v-expansion-panel>
     
               </v-card>
             </v-flex>
@@ -163,8 +180,9 @@ export default {
     vm.width = canvas.property("width")
     vm.height = canvas.property("height")
 
-    vm.xScale = d3.scaleLinear().range([vm.margin, vm.height - vm.margin]);
-    vm.yScale = d3.scaleLinear().range([vm.height - vm.margin, vm.margin]);
+    const smallerAxis = Math.min(vm.height, vm.width)
+    vm.xScale = d3.scaleLinear().range([vm.margin, smallerAxis - vm.margin]);  
+    vm.yScale = d3.scaleLinear().range([smallerAxis - vm.margin, vm.margin]);
 
     const zoom = d3.zoom()
         .scaleExtent([1/10 , 50])
