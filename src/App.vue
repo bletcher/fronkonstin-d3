@@ -16,127 +16,133 @@
             <v-flex xs3>
               <v-card class="pt-2">
 
-                <v-layout row wrap>
-                    <v-flex xs9>
-                        <v-slider class="ma-2"
-                        thumb-label
+            <v-layout row wrap>
+                <v-flex xs9>
+                    <v-slider class="ma-2"
+                    thumb-label
+                    v-model="selectedNEdges"
+                    label="# of edges"
+                    @change="update"
+                    :max="20"
+                    :min="1"
+                    :step="1"
+                    ></v-slider> 
+                </v-flex> 
+                <v-flex xs3>
+                    <v-text-field
                         v-model="selectedNEdges"
-                        label="# of edges"
-                        @change="update"
-                        :max="20"
-                        :min="1"
-                        :step="1"
-                        ></v-slider> 
-                    </v-flex> 
-                    <v-flex xs3>
-                        <v-text-field
-                            v-model="selectedNEdges"
-                            class="ma-2"
-                            type="number"
-                            @click="update"
-                        ></v-text-field>
-                    </v-flex>
-                </v-layout>
-
-            <v-layout row wrap>
-                <v-flex xs9>
-                <v-slider class="ma-2"
-                  thumb-label
-                  v-model="selectedNIter"
-                  label="# of iters"
-                  @change="update"
-                  :max="500"
-                  :min="1"
-                  :step="1"
-                ></v-slider>
-                </v-flex>
-                <v-flex xs3>
-                        <v-text-field
-                            v-model="selectedNIter"
-                            class="ma-2"
-                            type="number"
-                            @click="update"
-                        ></v-text-field>
-                    </v-flex>
-                </v-layout>
-
-
-            <v-layout row wrap>
-                <v-flex xs9>
-                <v-slider class="ma-2"
-                  thumb-label
-                  v-model="selectedPond"
-                  label="Pond"
-                  @change="update"
-                  :max="1"
-                  :min="0"
-                  :step="0.01"
-                ></v-slider>
-                </v-flex>
-                <v-flex xs3>
-                        <v-text-field
-                            v-model="selectedPond"
-                            class="ma-2"
-                            type="number"
-                            @click="update"
-                        ></v-text-field>
-                    </v-flex>
-                </v-layout>
-
-
-            <v-layout row wrap>
-                <v-flex xs9>
-                <v-slider class="ma-2"
-                  thumb-label
-                  v-model="selectedStep"
-                  label="Step"
-                  @change="update"
-                  :max="20"
-                  :min="1"
-                  :step="1"
-                ></v-slider>
-                </v-flex>
-                <v-flex xs3>
-                        <v-text-field
-                            v-model="selectedStep"
-                            class="ma-2"
-                            type="number"
-                            @click="update"
-                        ></v-text-field>
+                        class="ma-2"
+                        type="number"
+                        @click="update"
+                    ></v-text-field>
                 </v-flex>
             </v-layout>
-               
 
+            <v-layout row wrap>
+                <v-flex xs9>
+                    <v-slider class="ma-2"
+                    thumb-label
+                    v-model="selectedNIter"
+                    label="# of iters"
+                    @change="update"
+                    :max="500"
+                    :min="1"
+                    :step="1"
+                    ></v-slider>
+                </v-flex>
+                <v-flex xs3>
+                    <v-text-field
+                        v-model="selectedNIter"
+                        class="ma-2"
+                        type="number"
+                        @click="update"
+                    ></v-text-field>
+                </v-flex>
+            </v-layout>
 
+            <v-layout row wrap>
+                <v-flex xs9>
+                    <v-slider class="ma-2"
+                    thumb-label
+                    v-model="selectedPond"
+                    label="Pond"
+                    @change="update"
+                    :max="1"
+                    :min="0"
+                    :step="0.01"
+                    ></v-slider>
+                </v-flex>
+                <v-flex xs3>
+                    <v-text-field
+                        v-model="selectedPond"
+                        class="ma-2"
+                        @change="update"
+                    ></v-text-field>
+                </v-flex>
+            </v-layout>
 
-                <v-slider class="ma-2"
-                  thumb-label
-                  v-model="selectedAngle"
-                  label="Angle"
-                  @change="update"
-                  :max="7"
-                  :min="0"
-                  :step="0.01"
-                ></v-slider>
+            <v-layout row wrap>
+                <v-flex xs9>
+                    <v-slider class="ma-2"
+                    thumb-label
+                    v-model="selectedStep"
+                    label="Step"
+                    @change="update"
+                    :max="20"
+                    :min="1"
+                    :step="1"
+                    ></v-slider>
+                </v-flex>
+                <v-flex xs3>
+                    <v-text-field
+                        v-model="selectedStep"
+                        class="ma-2"
+                        type="number"
+                        @click="update"
+                    ></v-text-field>
+                </v-flex>
+            </v-layout>
 
-                <v-slider class="ma-2"
-                  thumb-label
-                  v-model="selectedCurve"
-                  label="Curve"
-                  @change="update"
-                  :max="10"
-                  :min="0"
-                  :step="0.1"
-                ></v-slider>
+            <v-layout row wrap>
+                <v-flex xs9>
+                    <v-slider class="ma-2"
+                    thumb-label
+                    v-model="selectedAngle"
+                    label="Angle"
+                    @change="update"
+                    :max="7"
+                    :min="0"
+                    :step="0.01"
+                    ></v-slider>               
+                </v-flex>
+                <v-flex xs3>
+                    <v-text-field
+                        v-model="selectedAngle"
+                        class="ma-2"
+                        @change="update"
+                    ></v-text-field>
+                </v-flex>
+            </v-layout>
 
-                <v-select class="ma-2"
-                  :items="functions"
-                  item-text="selectedFunction"
-                  label="Function"
-                  v-model="selectedFunction"
-                  @change="updateFunction"
-                ></v-select>
-                <hr>
+            <v-slider class="ma-2"
+                thumb-label
+                v-model="selectedCurve"
+                label="Curve"
+                @change="update"
+                :max="10"
+                :min="0"
+                :step="0.1"
+            ></v-slider>
+
+            <v-select class="ma-2"
+                :items="functions"
+                label="Function"
+                v-model="selectedFunction"
+                @change="updateFunction"
+                solo
+            ></v-select>
+{{ selectedFunction }}
+            <hr>
 
                 <v-expansion-panel>
                     <v-expansion-panel-content>
@@ -145,31 +151,29 @@
                         </template>
                         <v-card>
 
-                                <v-flex xs12 sm6 class="py-2">      
-                                <v-btn-toggle 
-                                v-model="colorSource"
-                                @change="updateColorSource"
-                                >
-                                    <v-btn flat value="Lines">
-                                    Lines
-                                    </v-btn>
-                                    <v-btn flat value="Background">
-                                    Background
-                                    </v-btn>
-                                </v-btn-toggle>
-                                </v-flex>
+                            <v-flex xs12 sm6 class="py-2">      
+                            <v-btn-toggle 
+                            v-model="colorSource"
+                            @change="updateColorSource"
+                            >
+                                <v-btn flat value="Lines">
+                                Lines
+                                </v-btn>
+                                <v-btn flat value="Background">
+                                Background
+                                </v-btn>
+                            </v-btn-toggle>
+                            </v-flex>
 
-                                <color-picker :width=300 :height=300 :disabled="false" v-model="selectedColor" startColor="#ff0000" @color-change="onColorChange">
-                                </color-picker>
-                                <div class="selected-color-info">
-                                <p>Selected color:</p>
-                                <svg height="32" width="32">
-                                    <circle cx="16" cy="16" r="15" :fill="selectedColor" />
-                                </svg>
-                                <p> {{ selectedColor }}</p>
-                                </div>
-
-
+                            <color-picker :width=300 :height=300 :disabled="false" v-model="selectedColor" startColor="#ff0000" @color-change="onColorChange">
+                            </color-picker>
+                            <div class="selected-color-info">
+                            <p>Selected color:</p>
+                            <svg height="32" width="32">
+                                <circle cx="16" cy="16" r="15" :fill="selectedColor" />
+                            </svg>
+                            <p> {{ selectedColor }}</p>
+                            </div>
                         </v-card>
                     </v-expansion-panel-content>
                     </v-expansion-panel>
@@ -265,7 +269,7 @@ export default {
 
     vm.xScale.domain(xRange)
     vm.yScale.domain(yRange)
-    console.log('getDomain', vm.list, xStartValues,yStartValues,xRange,yRange,xRange[1]-xRange[0],yRange[1]-yRange[0])
+    //console.log('getDomain', vm.list, xStartValues,yStartValues,xRange,yRange,xRange[1]-xRange[0],yRange[1]-yRange[0])
    },
    zoomed() {
      vm = this
@@ -333,12 +337,12 @@ export default {
         Math.atan2(
           vm.list[refIndex][3] - vm.list[refIndex][1],
           vm.list[refIndex][2] - vm.list[refIndex][0]
-        ) + Math.PI/vm.selectedAngle;
+        ) + vm.selectedAngle;
 
       const x = vm.selectedPond * vm.list[refIndex][0] + (1 - vm.selectedPond) * vm.list[refIndex][2]  
       const y = vm.selectedPond * vm.list[refIndex][1] + (1 - vm.selectedPond) * vm.list[refIndex][3] 
-      const xEnd = x + vm.selectedFunction(ringNum) * Math.cos(angle) * vm.selectedScale
-      const yEnd = y + vm.selectedFunction(ringNum) * Math.sin(angle) * vm.selectedScale
+      const xEnd = x + vm.selectedFunction(ringNum) * Math.cos(angle) 
+      const yEnd = y + vm.selectedFunction(ringNum) * Math.sin(angle) 
 
       vm.list.push([x, y, xEnd, yEnd])
    },
@@ -413,7 +417,7 @@ export default {
         }
     }
     vm.selectedFunction = vm.fun
-    console.log('function', vm.fun, 1,vm.selectedFunction)
+    console.log('function', vm.fun, 1,vm.selectedFunction, vm.selectedFunction(3), vm.selectedFunction(4))
     this.generateLines()
   },
   onColorChange(selectedColor) {
