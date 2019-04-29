@@ -12,27 +12,57 @@
               </v-card>
             </v-flex>
             
+       
             <v-flex xs3>
               <v-card class="pt-2">
-                <v-slider class="ma-2"
-                  thumb-label
-                  v-model="selectedNEdges"
-                  label="# of edges"
-                  @change="update"
-                  :max="20"
-                  :min="1"
-                  :step="1"
-                ></v-slider>
-            
+
+                <v-layout row wrap>
+                    <v-flex xs9>
+                        <v-slider class="ma-2"
+                        thumb-label
+                        v-model="selectedNEdges"
+                        label="# of edges"
+                        @change="update"
+                        :max="20"
+                        :min="1"
+                        :step="1"
+                        ></v-slider> 
+                    </v-flex> 
+                    <v-flex xs3>
+                        <v-text-field
+                            v-model="selectedNEdges"
+                            class="ma-2"
+                            type="number"
+                            @click="update"
+                        ></v-text-field>
+                    </v-flex>
+                </v-layout>
+
+            <v-layout row wrap>
+                <v-flex xs9>
                 <v-slider class="ma-2"
                   thumb-label
                   v-model="selectedNIter"
                   label="# of iters"
                   @change="update"
-                  :max="300"
+                  :max="500"
                   :min="1"
                   :step="1"
                 ></v-slider>
+                </v-flex>
+                <v-flex xs3>
+                        <v-text-field
+                            v-model="selectedNIter"
+                            class="ma-2"
+                            type="number"
+                            @click="update"
+                        ></v-text-field>
+                    </v-flex>
+                </v-layout>
+
+
+            <v-layout row wrap>
+                <v-flex xs9>
                 <v-slider class="ma-2"
                   thumb-label
                   v-model="selectedPond"
@@ -42,6 +72,20 @@
                   :min="0"
                   :step="0.01"
                 ></v-slider>
+                </v-flex>
+                <v-flex xs3>
+                        <v-text-field
+                            v-model="selectedPond"
+                            class="ma-2"
+                            type="number"
+                            @click="update"
+                        ></v-text-field>
+                    </v-flex>
+                </v-layout>
+
+
+            <v-layout row wrap>
+                <v-flex xs9>
                 <v-slider class="ma-2"
                   thumb-label
                   v-model="selectedStep"
@@ -51,6 +95,20 @@
                   :min="1"
                   :step="1"
                 ></v-slider>
+                </v-flex>
+                <v-flex xs3>
+                        <v-text-field
+                            v-model="selectedStep"
+                            class="ma-2"
+                            type="number"
+                            @click="update"
+                        ></v-text-field>
+                </v-flex>
+            </v-layout>
+               
+
+
+
                 <v-slider class="ma-2"
                   thumb-label
                   v-model="selectedAngle"
@@ -77,10 +135,7 @@
                   label="Function"
                   v-model="selectedFunction"
                   @change="updateFunction"
-                  
-                  
                 ></v-select>
-       
                 <hr>
 
                 <v-expansion-panel>
