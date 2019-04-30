@@ -7,7 +7,7 @@
             <v-flex xs9 ref="stageFlex">
               <v-card>
                 <div id="canvasContainer">
-                  <canvas width="960" height="700"></canvas>
+                  <canvas width="900" height="750"></canvas>
                 </div>
               </v-card>
             </v-flex>
@@ -191,7 +191,6 @@
 <script>
 import * as d3 from 'd3'
 import ColorPicker from 'vue-color-picker-wheel';
-let vm = {};
 
 export default {
   name: 'App',
@@ -205,19 +204,15 @@ export default {
       list: [],
 
       selectedNEdges: 5, //# Number of edges of the original polygon
-      selectedNIter: 4, //# Number of iterations
+      selectedNIter: 5, //# Number of iterations
       selectedPond: 0.5, //# Weight to calculate the point on the middle of each edge
       selectedStep: 3,// # No of times to draw mid-segments before connect ending points
       selectedAngle: 2, //# angle of mid-segment with the edge
       selectedCurve: 5, //# Curvature of curves
-      selectedScale: 1, // inital scaling factor
+      curveAdjuster: .01,
       selectedFunction: function() {
         return (0.2);
       },
-      initXData: null,
-      initYData: null,
-      stageWidth: null,
-      stageHeight: null,
 
       currentTransform: d3.zoomIdentity,
       selectedColor: "#ff6600",
@@ -232,33 +227,32 @@ export default {
     }
   },
   mounted(){
-    vm = this
-
+ 
     const canvas = d3.select("canvas")
-    vm.context = canvas.node().getContext("2d")
-    vm.width = canvas.property("width")
-    vm.height = canvas.property("height")
 
-    const smallerAxis = Math.min(vm.height, vm.width)
-    vm.xScale = d3.scaleLinear().range([vm.margin, smallerAxis - vm.margin]);  
-    vm.yScale = d3.scaleLinear().range([smallerAxis - vm.margin, vm.margin]);
+    this.context = canvas.node().getContext("2d")
+    this.width = canvas.property("width")
+    this.height = canvas.property("height")
+
+    const smallerAxis = Math.min(this.height, this.width)
+    this.xScale = d3.scaleLinear().range([this.margin, smallerAxis - this.margin]);  
+    this.yScale = d3.scaleLinear().range([smallerAxis - this.margin, this.margin]);
 
     const zoom = d3.zoom()
         .scaleExtent([1/10 , 50])
-        .on("zoom", vm.zoomed);
+        .on("zoom", this.zoomed);
 
     canvas.call(zoom)
 
-    vm.generateLines()
+    this.generateLines()
   },
  methods: {
    getDomain(){
-    vm = this   
-
-    const xStartValues = vm.list.map(function(value,index) { return value[0]; })
-    const yStartValues = vm.list.map(function(value,index) { return value[1]; })
-    const xEndValues   = vm.list.map(function(value,index) { return value[2]; })
-    const yEndValues   = vm.list.map(function(value,index) { return value[3]; })
+ 
+    const xStartValues = this.list.map(function(value,index) { return value[0]; })
+    const yStartValues = this.list.map(function(value,index) { return value[1]; })
+    const xEndValues   = this.list.map(function(value,index) { return value[2]; })
+    const yEndValues   = this.list.map(function(value,index) { return value[3]; })
     const xMin = Math.min(...xStartValues,...xEndValues)
     const xMax = Math.max(...xStartValues,...xEndValues)
     const yMin = Math.min(...yStartValues,...yEndValues)
@@ -267,176 +261,185 @@ export default {
     const xRange = [Math.min(...xStartValues,...xEndValues), Math.max(...xStartValues,...xEndValues)]
     const yRange = [Math.min(...yStartValues,...yEndValues), Math.max(...yStartValues,...yEndValues)]
 
-    vm.xScale.domain(xRange)
-    vm.yScale.domain(yRange)
-    //console.log('getDomain', vm.list, xStartValues,yStartValues,xRange,yRange,xRange[1]-xRange[0],yRange[1]-yRange[0])
+    this.xScale.domain(xRange)
+    this.yScale.domain(yRange)
+    //console.log('getDomain', this.list, xStartValues,yStartValues,xRange,yRange,xRange[1]-xRange[0],yRange[1]-yRange[0])
    },
    zoomed() {
-     vm = this
-     vm.currentTransform = d3.event.transform
-     vm.drawLines(d3.event.transform);
+
+     this.currentTransform = d3.event.transform
+     this.drawLines(d3.event.transform);
     },
    generateLines(){
-     vm = this
-     vm.list.length = 0
-     vm.context.clearRect(0, 0, vm.width, vm.height);
+     this.list.length = 0
+     this.context.clearRect(0, 0, this.width, this.height);
 
-     for (let n = 0; n < vm.selectedNEdges; n++) {
+     for (let n = 0; n < this.selectedNEdges; n++) {
        this.polygon(n);
      }
 
-    for (let i = 1; i < vm.selectedNIter; i++) {
-      for (let n = 0; n < vm.selectedNEdges; n++) {
-        i%vm.selectedStep === 0 ? this.connectPoints(n,i) : this.midPoints(n,i)
+    for (let i = 1; i < this.selectedNIter; i++) {
+      for (let n = 0; n < this.selectedNEdges; n++) {
+        i%this.selectedStep === 0 ? this.connectPoints(n,i) : this.midPoints(n,i)
       }
     }
-    console.log('generateLines', vm.currentTransform)
 
-    vm.getDomain() // domain of data. Used for xScale, yScale
-    this.drawLines(vm.currentTransform)
+    this.getDomain() // domain of data. Used for xScale, yScale
+    this.drawLines(this.currentTransform)
    },
    drawLines(transform){
-     vm = this
- //    console.log('drawLines', transform)
-     vm.context.clearRect(0, 0, vm.width, vm.height);
-     vm.context.fillStyle = vm.selectedBackgroundColor
-     vm.context.fillRect(0, 0, vm.width, vm.height)
+ //    console.log('drawLines', transform, this.width, this.height)
+     this.context.clearRect(0, 0, this.width, this.height);
+     this.context.fillStyle = this.selectedBackgroundColor
+     this.context.fillRect(0, 0, this.width, this.height)
      
-     for (let n = 0; n < vm.list.length; n++) { 
+     for (let n = 0; n < this.list.length; n++) { 
        this.drawLine(n,transform)  
      }
    },
    drawLine(n,transform){
- //    console.log('drawLine', transform, vm.xScale(500),vm.yScale(400), 
- //      transform.x + transform.k * vm.xScale(vm.list[n][0]),
- //      transform.y + transform.k * vm.yScale(vm.list[n][1]))
-     vm = this
-     vm.context.beginPath()
-     vm.context.strokeStyle = vm.selectedLinesColor
-     vm.context.moveTo(transform.x + transform.k * vm.xScale(vm.list[n][0]),
-                       transform.y + transform.k * vm.yScale(vm.list[n][1]));
-     vm.context.lineTo(transform.x + transform.k * vm.xScale(vm.list[n][2]),
-                       transform.y + transform.k * vm.yScale(vm.list[n][3]));
-     vm.context.stroke(); 
+     const x3y3 = this.getX3Y3(this.list[n]) 
+     console.log('drawLine', x3y3) 
+     this.context.beginPath()
+     this.context.strokeStyle = this.selectedLinesColor
+     this.context.moveTo(transform.x + transform.k * this.xScale(this.list[n][0]),
+                         transform.y + transform.k * this.yScale(this.list[n][1]));
+    //  this.context.lineTo(transform.x + transform.k * this.xScale(this.list[n][2]),
+    //                      transform.y + transform.k * this.yScale(this.list[n][3]));
+    this.context.quadraticCurveTo(
+        transform.x + transform.k * this.xScale(x3y3[0]),
+        transform.y + transform.k * this.yScale(x3y3[1]),
+        transform.x + transform.k * this.xScale(this.list[n][2]),
+        transform.y + transform.k * this.yScale(this.list[n][3]));
+
+     this.context.stroke(); 
 
    }, 
-   polygon(n) {
-       const xStart = n == 0 ? vm.width/2  : vm.list[n - 1][2];
-       const yStart = n == 0 ? vm.height/2 : vm.list[n - 1][3];
-       const xEnd = xStart + Math.cos(((n + 1) * 2 * Math.PI) / vm.selectedNEdges);
-       const yEnd = yStart + Math.sin(((n + 1) * 2 * Math.PI) / vm.selectedNEdges);  
+   getX3Y3(d){
+       const midX = (d[0] + d[2])/2
+       const midY = (d[1] + d[3])/2
+       const slope = (d[3] - d[1])/(d[2] - d[0])
 
-       vm.list.push([xStart, yStart, xEnd, yEnd])
+       const xOffset = this.selectedCurve * this.curveAdjuster 
+       const x3 = midX + xOffset
+       const int = midY + midX/slope
+       const y3 = -(1/slope) * x3 + int
+
+       return [x3, y3]
+   },
+   polygon(n) {
+       const xStart = n == 0 ? this.width/2  : this.list[n - 1][2];
+       const yStart = n == 0 ? this.height/2 : this.list[n - 1][3];
+       const xEnd = xStart + Math.cos(((n + 1) * 2 * Math.PI) / this.selectedNEdges);
+       const yEnd = yStart + Math.sin(((n + 1) * 2 * Math.PI) / this.selectedNEdges);  
+
+       this.list.push([xStart, yStart, xEnd, yEnd])
    },
    midPoints(n, ringNum) {
       
-      const currentIndex = vm.list.length
-      const refIndex = currentIndex - vm.selectedNEdges 
+      const currentIndex = this.list.length
+      const refIndex = currentIndex - this.selectedNEdges 
 
       const angle =
         Math.atan2(
-          vm.list[refIndex][3] - vm.list[refIndex][1],
-          vm.list[refIndex][2] - vm.list[refIndex][0]
-        ) + vm.selectedAngle;
+          this.list[refIndex][3] - this.list[refIndex][1],
+          this.list[refIndex][2] - this.list[refIndex][0]
+        ) + this.selectedAngle;
 
-      const x = vm.selectedPond * vm.list[refIndex][0] + (1 - vm.selectedPond) * vm.list[refIndex][2]  
-      const y = vm.selectedPond * vm.list[refIndex][1] + (1 - vm.selectedPond) * vm.list[refIndex][3] 
-      const xEnd = x + vm.selectedFunction(ringNum) * Math.cos(angle) 
-      const yEnd = y + vm.selectedFunction(ringNum) * Math.sin(angle) 
+      const x = this.selectedPond * this.list[refIndex][0] + (1 - this.selectedPond) * this.list[refIndex][2]  
+      const y = this.selectedPond * this.list[refIndex][1] + (1 - this.selectedPond) * this.list[refIndex][3] 
+      const xEnd = x + this.selectedFunction(ringNum) * Math.cos(angle) 
+      const yEnd = y + this.selectedFunction(ringNum) * Math.sin(angle) 
 
-      vm.list.push([x, y, xEnd, yEnd])
+      this.list.push([x, y, xEnd, yEnd])
    },
    connectPoints(n,i) {
-      const currentIndex = vm.list.length
-      const refIndex = currentIndex - vm.selectedNEdges 
+      const currentIndex = this.list.length
+      const refIndex = currentIndex - this.selectedNEdges 
 
-      const x = vm.list[refIndex][2]
-      const y = vm.list[refIndex][3]
+      const x = this.list[refIndex][2]
+      const y = this.list[refIndex][3]
       let xEnd = null
       let yEnd = null
 
-      if (n == (vm.selectedNEdges - 1)) {
-        xEnd = vm.list[refIndex + 1 - vm.selectedNEdges][2]
-        yEnd = vm.list[refIndex + 1 - vm.selectedNEdges][3]
+      if (n == (this.selectedNEdges - 1)) {
+        xEnd = this.list[refIndex + 1 - this.selectedNEdges][2]
+        yEnd = this.list[refIndex + 1 - this.selectedNEdges][3]
       } else {      
-        xEnd = vm.list[refIndex + 1][2]
-        yEnd = vm.list[refIndex + 1][3]
+        xEnd = this.list[refIndex + 1][2]
+        yEnd = this.list[refIndex + 1][3]
       }
-      vm.list.push([x, y, xEnd, yEnd])
+      this.list.push([x, y, xEnd, yEnd])
    },
   update(){
     this.generateLines()
   },
   updateFunction(){
-    vm = this;
-    
-    switch(vm.selectedFunction) {
+    switch(this.selectedFunction) {
       case 'constant':
-        vm.fun = function() {
+        this.fun = function() {
             return (0.2);
         }
         break;
       case 'identity':
-        vm.fun = function(d) {
+        this.fun = function(d) {
             return (d);
         }
         break;
       case 'log':
-        vm.fun = function(d) {
+        this.fun = function(d) {
             return Math.log(d);
         }
         break;
       case 'square root':
-        vm.fun = function(d) {
+        this.fun = function(d) {
             return Math.sqrt(d);
         }
         break;
       case 'sin':
-        vm.fun = function(d) {
+        this.fun = function(d) {
             return Math.sin(d);
         }
         break;
       case 'log(x + 1)':
-        vm.fun = function(d) {
+        this.fun = function(d) {
             return Math.log(d + 1);
         }
         break;
       case '1 - cos(x)^2':
-        vm.fun = function(d) {
+        this.fun = function(d) {
             return 1 - Math.cos(d)^2;
         }
         break;
       case '1/x':
-        vm.fun = function(d) {
+        this.fun = function(d) {
             return 1 / d;
         }
         break;
       default:
-        vm.fun = function(d) {
+        this.fun = function(d) {
             return (d);
         }
     }
-    vm.selectedFunction = vm.fun
-    console.log('function', vm.fun, 1,vm.selectedFunction, vm.selectedFunction(3), vm.selectedFunction(4))
+    this.selectedFunction = this.fun
+    console.log('function', this.fun, 1,this.selectedFunction, this.selectedFunction(3), this.selectedFunction(4))
     this.generateLines()
   },
   onColorChange(selectedColor) {
-    vm = this
-    if(vm.colorSource == 'Lines'){
-      vm.selectedLinesColor = selectedColor
+    if(this.colorSource == 'Lines'){
+      this.selectedLinesColor = selectedColor
     }
     else {
-      vm.selectedBackgroundColor = selectedColor
+      this.selectedBackgroundColor = selectedColor
     }
-    vm.drawLines(vm.currentTransform)
-    //vm.drawCircles(vm.currentTransform)
-    console.log('Color has changed to: ', selectedColor, vm.colorSource, vm.currentTransform);
+    this.drawLines(this.currentTransform)
+    //this.drawCircles(this.currentTransform)
+    console.log('Color has changed to: ', selectedColor, this.colorSource, this.currentTransform);
   },
   updateColorSource(){
-    vm = this
-    console.log('updateColorSource', vm.colorSource, vm.currentTransform)
-    vm.drawLines(vm.currentTransform)
-    //vm.drawCircles(vm.currentTransform)
+    console.log('updateColorSource', this.colorSource, this.currentTransform)
+    this.drawLines(this.currentTransform)
+    //this.drawCircles(this.currentTransform)
   },
   getAvg(d) {
     const total = d.reduce((acc, c) => acc + c, 0);
