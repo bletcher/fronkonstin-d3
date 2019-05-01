@@ -124,15 +124,27 @@
                 </v-flex>
             </v-layout>
 
-            <v-slider class="ma-2"
-                thumb-label
-                v-model="selectedCurve"
-                label="Curve"
-                @change="update"
-                :max="10"
-                :min="0"
-                :step="0.1"
-            ></v-slider>
+            <v-layout row wrap>
+                <v-flex xs9>
+                    <v-slider class="ma-2"
+                        thumb-label
+                        v-model="selectedCurve"
+                        label="Curve"
+                        @change="update"
+                        :max="1"
+                        :min="0"
+                        :step="0.01"
+                    ></v-slider>              
+                </v-flex>
+                <v-flex xs3>
+                    <v-text-field
+                        v-model="selectedCurve"
+                        class="ma-2"
+                        @change="update"
+                    ></v-text-field>
+                </v-flex>
+            </v-layout>
+
 
             <v-select class="ma-2"
                 :items="functions"
@@ -208,8 +220,8 @@ export default {
       selectedPond: 0.5, //# Weight to calculate the point on the middle of each edge
       selectedStep: 3,// # No of times to draw mid-segments before connect ending points
       selectedAngle: 2, //# angle of mid-segment with the edge
-      selectedCurve: 5, //# Curvature of curves
-      curveAdjuster: .01,
+      selectedCurve: 0, //# Curvature of curves
+      curveAdjuster: 0.5,
       selectedFunction: function() {
         return (0.2);
       },
@@ -243,7 +255,6 @@ export default {
         .on("zoom", this.zoomed);
 
     canvas.call(zoom)
-
     this.generateLines()
   },
  methods: {
@@ -319,11 +330,17 @@ export default {
        const midX = (d[0] + d[2])/2
        const midY = (d[1] + d[3])/2
        const slope = (d[3] - d[1])/(d[2] - d[0])
+       const dist = Math.sqrt(Math.pow(d[2] - d[0], 2) + Math.pow(d[3] - d[1], 2))
+       const perpDist = dist * this.selectedCurve * this.curveAdjuster
 
-       const xOffset = this.selectedCurve * this.curveAdjuster 
-       const x3 = midX + xOffset
-       const int = midY + midX/slope
-       const y3 = -(1/slope) * x3 + int
+       const speed = perpDist;
+       const angle = Math.atan(slope) / Math.PI * 180 - 90 ;
+       const radians = angle * Math.PI / 180;
+       const xUnits = Math.cos(radians) * speed;
+       const yUnits = Math.sin(radians) * speed;
+
+       const x3 = midX + xUnits
+       const y3 = midY + yUnits
 
        return [x3, y3]
    },
