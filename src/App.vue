@@ -265,7 +265,6 @@ export default {
 
       this.xScale.domain(xRange)
       this.yScale.domain(yRange)
-    // console.log('getDomain', this.list, xStartValues,yStartValues,xRange,yRange,xRange[1]-xRange[0],yRange[1]-yRange[0])
     },
     zoomed () {
       this.currentTransform = d3.event.transform
@@ -289,7 +288,6 @@ export default {
       this.drawLines(this.currentTransform)
     },
     drawLines (transform) {
-      //    console.log('drawLines', transform, this.width, this.height)
       this.context.clearRect(0, 0, this.width, this.height)
       this.context.fillStyle = this.selectedBackgroundColor
       this.context.fillRect(0, 0, this.width, this.height)
@@ -300,7 +298,6 @@ export default {
     },
     drawLine (n, transform) {
       const x3y3 = this.getX3Y3(this.list[n])
-      console.log('drawLine', x3y3)
       this.context.beginPath()
       this.context.strokeStyle = this.selectedLinesColor
       this.context.moveTo(transform.x + transform.k * this.xScale(this.list[n][0]),
@@ -426,7 +423,6 @@ export default {
           }
       }
       this.selectedFunction = this.fun
-      console.log('function', this.fun, 1, this.selectedFunction, this.selectedFunction(3), this.selectedFunction(4))
       this.generateLines()
     },
     onColorChange (selectedColor) {
@@ -436,13 +432,9 @@ export default {
         this.selectedBackgroundColor = selectedColor
       }
       this.drawLines(this.currentTransform)
-      // this.drawCircles(this.currentTransform)
-      console.log('Color has changed to: ', selectedColor, this.colorSource, this.currentTransform)
     },
     updateColorSource () {
-      console.log('updateColorSource', this.colorSource, this.currentTransform)
-      this.drawLines(this.currentTransform)
-    // this.drawCircles(this.currentTransform)
+     this.drawLines(this.currentTransform)
     },
     getAvg (d) {
       const total = d.reduce((acc, c) => acc + c, 0)
