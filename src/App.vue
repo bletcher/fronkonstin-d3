@@ -155,8 +155,7 @@
             ></v-select>
 {{ selectedFunction }}
             <hr>
-
-                <v-expansion-panel>
+                <v-expansion-panel inset>
                     <v-expansion-panel-content>
                         <template v-slot:header>
                         <div>Color picker</div>
@@ -164,7 +163,7 @@
                         <v-card>
 
                             <v-flex xs12 sm6 class="py-2">      
-                            <v-btn-toggle 
+                            <v-btn-toggle
                             v-model="colorSource"
                             @change="updateColorSource"
                             >
@@ -195,8 +194,8 @@
 
         </v-layout>
       </v-container>
-
     </div> 
+    <p style="margin-left: 30px">  See <a href="https://fronkonstin.com/2019/03/27/drrrawing-with-purrr/">this link</a> for detailed description of the algorithm and R code that inspired this application</p>
   </v-app>
 </template>
 
@@ -333,11 +332,10 @@ export default {
        const dist = Math.sqrt(Math.pow(d[2] - d[0], 2) + Math.pow(d[3] - d[1], 2))
        const perpDist = dist * this.selectedCurve * this.curveAdjuster
 
-       const speed = perpDist;
        const angle = Math.atan(slope) / Math.PI * 180 - 90 ;
        const radians = angle * Math.PI / 180;
-       const xUnits = Math.cos(radians) * speed;
-       const yUnits = Math.sin(radians) * speed;
+       const xUnits = Math.cos(radians) * perpDist;
+       const yUnits = Math.sin(radians) * perpDist;
 
        const x3 = midX + xUnits
        const y3 = midY + yUnits
