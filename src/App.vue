@@ -10,6 +10,7 @@
                   <canvas width="900" height="750"></canvas>
                 </div>
               </v-card>
+              <p style="margin-left: 10px" class="mt-3">  See <a href="https://fronkonstin.com/2019/03/27/drrrawing-with-purrr/">this link</a> for detailed description of the algorithm and R code that inspired this application</p>
             </v-flex>
 
             <v-flex xs3>
@@ -193,7 +194,6 @@
         </v-layout>
       </v-container>
     </div>
-    <p style="margin-left: 30px">  See <a href="https://fronkonstin.com/2019/03/27/drrrawing-with-purrr/">this link</a> for detailed description of the algorithm and R code that inspired this application</p>
   </v-app>
 </template>
 
