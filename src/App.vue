@@ -22,7 +22,7 @@
                     thumb-label
                     v-model="selectedNEdges"
                     label="# of edges"
-                    @change="update"
+                    @input="update"
                     :max="20"
                     :min="1"
                     :step="1"
@@ -44,7 +44,7 @@
                     thumb-label
                     v-model="selectedNIter"
                     label="# of iters"
-                    @change="update"
+                    @input="update"
                     :max="500"
                     :min="1"
                     :step="1"
@@ -66,7 +66,7 @@
                     thumb-label
                     v-model="selectedPond"
                     label="Pond"
-                    @change="update"
+                    @input="update"
                     :max="1"
                     :min="0"
                     :step="0.01"
@@ -87,7 +87,7 @@
                     thumb-label
                     v-model="selectedStep"
                     label="Step"
-                    @change="update"
+                    @input="update"
                     :max="20"
                     :min="1"
                     :step="1"
@@ -109,7 +109,7 @@
                     thumb-label
                     v-model="selectedAngle"
                     label="Angle"
-                    @change="update"
+                    @input="update"
                     :max="7"
                     :min="0"
                     :step="0.01"
@@ -130,7 +130,7 @@
                         thumb-label
                         v-model="selectedCurve"
                         label="Curve"
-                        @change="update"
+                        @input="update"
                         :max="1"
                         :min="0"
                         :step="0.01"
@@ -149,7 +149,7 @@
                 :items="functions"
                 label="Function"
                 v-model="selectedFunction"
-                @change="updateFunction"
+                @change="update"
                 solo
             ></v-select>
 {{ selectedFunction }}
@@ -201,6 +201,17 @@
 import * as d3 from 'd3'
 import ColorPicker from 'vue-color-picker-wheel'
 
+const functions = {
+  constant: () => 0.2,
+  identity: d => d,
+  log: d => Math.log(d),
+  'square root': d => Math.sqrt(d),
+  sin: d => Math.sin(d),
+  'log(x + 1)': d => Math.log(d + 1),
+  '1 - cos(x)^2': d => 1 - Math.cos(d) ^ 2,
+  '1/x': d => 1 / d
+}
+
 export default {
   name: 'App',
   components: {
@@ -219,9 +230,7 @@ export default {
       selectedAngle: 2, // # angle of mid-segment with the edge
       selectedCurve: 0, // # Curvature of curves
       curveAdjuster: 0.5,
-      selectedFunction: function () {
-        return (0.2)
-      },
+      selectedFunction: 'constant',
 
       currentTransform: d3.zoomIdentity,
       selectedColor: '#ff6600',
@@ -349,8 +358,8 @@ export default {
 
       const x = this.selectedPond * this.list[refIndex][0] + (1 - this.selectedPond) * this.list[refIndex][2]
       const y = this.selectedPond * this.list[refIndex][1] + (1 - this.selectedPond) * this.list[refIndex][3]
-      const xEnd = x + this.selectedFunction(ringNum) * Math.cos(angle)
-      const yEnd = y + this.selectedFunction(ringNum) * Math.sin(angle)
+      const xEnd = x + functions[this.selectedFunction](ringNum) * Math.cos(angle)
+      const yEnd = y + functions[this.selectedFunction](ringNum) * Math.sin(angle)
 
       this.list.push([x, y, xEnd, yEnd])
     },
@@ -373,56 +382,6 @@ export default {
       this.list.push([x, y, xEnd, yEnd])
     },
     update () {
-      this.generateLines()
-    },
-    updateFunction () {
-      switch (this.selectedFunction) {
-        case 'constant':
-          this.fun = function () {
-            return (0.2)
-          }
-          break
-        case 'identity':
-          this.fun = function (d) {
-            return (d)
-          }
-          break
-        case 'log':
-          this.fun = function (d) {
-            return Math.log(d)
-          }
-          break
-        case 'square root':
-          this.fun = function (d) {
-            return Math.sqrt(d)
-          }
-          break
-        case 'sin':
-          this.fun = function (d) {
-            return Math.sin(d)
-          }
-          break
-        case 'log(x + 1)':
-          this.fun = function (d) {
-            return Math.log(d + 1)
-          }
-          break
-        case '1 - cos(x)^2':
-          this.fun = function (d) {
-            return 1 - Math.cos(d) ^ 2
-          }
-          break
-        case '1/x':
-          this.fun = function (d) {
-            return 1 / d
-          }
-          break
-        default:
-          this.fun = function (d) {
-            return (d)
-          }
-      }
-      this.selectedFunction = this.fun
       this.generateLines()
     },
     onColorChange (selectedColor) {
