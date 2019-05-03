@@ -152,7 +152,7 @@
                 @change="update"
                 solo
             ></v-select>
-{{ selectedFunction }}
+
             <hr>
                 <v-expansion-panel>
                     <v-expansion-panel-content>
