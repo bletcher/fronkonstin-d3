@@ -7,7 +7,7 @@
             <v-flex xs9 ref="stageFlex">
               <v-card>
                 <div id="canvasContainer">
-                  <canvas width="900" height="750"></canvas>
+                  <canvas width="900" height="700"></canvas>
                 </div>
               </v-card>
               <p style="margin-left: 10px" class="mt-3">  See <a href="https://fronkonstin.com/2019/03/27/drrrawing-with-purrr/">this link</a> for detailed description of the algorithm and R code that inspired this application</p>
