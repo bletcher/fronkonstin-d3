@@ -10,7 +10,7 @@
                   <canvas width="900" height="700"></canvas>
                 </div>
               </v-card>
-              <p style="margin-left: 10px" class="mt-3">  See <a href="https://fronkonstin.com/2019/03/27/drrrawing-with-purrr/">this link</a> for detailed description of the algorithm and R code that inspired this application</p>
+              <p style="margin-left: 10px" class="mt-3">  See <a href="https://fronkonstin.com/2019/03/27/drrrawing-with-purrr/">this link</a> for detailed description of the algorithm and R code that inspired this application. Make sure to drag the sliders!</p>
             </v-flex>
 
             <v-flex xs3>
@@ -23,7 +23,7 @@
                     v-model="selectedNEdges"
                     label="# of edges"
                     @input="update"
-                    :max="20"
+                    :max="40"
                     :min="1"
                     :step="1"
                     ></v-slider>
@@ -45,7 +45,7 @@
                     v-model="selectedNIter"
                     label="# of iters"
                     @input="update"
-                    :max="500"
+                    :max="750"
                     :min="1"
                     :step="1"
                     ></v-slider>
@@ -88,7 +88,7 @@
                     v-model="selectedStep"
                     label="Step"
                     @input="update"
-                    :max="20"
+                    :max="40"
                     :min="1"
                     :step="1"
                     ></v-slider>
@@ -110,7 +110,7 @@
                     v-model="selectedAngle"
                     label="Angle"
                     @input="update"
-                    :max="7"
+                    :max="10"
                     :min="0"
                     :step="0.01"
                     ></v-slider>
@@ -145,14 +145,20 @@
                 </v-flex>
             </v-layout>
 
-            <v-select class="ma-2"
-                :items="functions"
-                label="Function"
-                v-model="selectedFunction"
-                @change="update"
-                solo
-            ></v-select>
-
+            <v-layout row wrap>
+                <v-flex xs4>
+                    <v-subheader>Function</v-subheader>
+                </v-flex>
+                <v-flex xs8>
+                    <v-select class="ma-2"
+                        :items="functions"
+                        label="Function"
+                        v-model="selectedFunction"
+                        @change="update"
+                        solo
+                    ></v-select>
+                </v-flex>
+            </v-layout>
             <hr>
                 <v-expansion-panel>
                     <v-expansion-panel-content>
