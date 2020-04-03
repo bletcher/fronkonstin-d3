@@ -1,5 +1,7 @@
 # fronkonstin-d3
 
+app available at https://ecosheds.org/dev/fronk/
+
 ## Project setup
 ```
 npm install
